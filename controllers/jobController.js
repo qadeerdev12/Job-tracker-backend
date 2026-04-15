@@ -1,3 +1,4 @@
+const mongoose = require("mongoose"); 
 const Job = require("../models/Job");
 
 const createJob = async (req, res) => {
