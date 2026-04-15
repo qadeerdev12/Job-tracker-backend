@@ -102,10 +102,20 @@ const deleteJob = async (req, res) => {
 const getJobStats = async (req, res) => {
   try {
     console.log("Stats route hit");
+    console.log("User:", req.user); // debug
+
+    // ✅ Ensure user exists
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "User not authorized" });
+    }
+
+    // ✅ Convert to ObjectId (IMPORTANT for aggregation)
+    const userId = new mongoose.Types.ObjectId(req.user._id);
+
     const stats = await Job.aggregate([
       {
         $match: {
-          user: req.user._id,
+          user: userId,
         },
       },
       {
@@ -116,7 +126,7 @@ const getJobStats = async (req, res) => {
       },
     ]);
 
-    // Convert array → object
+    // ✅ Default structure
     const statsObject = {
       Applied: 0,
       Interview: 0,
@@ -124,6 +134,7 @@ const getJobStats = async (req, res) => {
       Rejected: 0,
     };
 
+    // ✅ Fill values
     stats.forEach((item) => {
       statsObject[item._id] = item.count;
     });
@@ -131,6 +142,7 @@ const getJobStats = async (req, res) => {
     res.status(200).json(statsObject);
 
   } catch (error) {
+    console.log("STATS ERROR:", error); // 🔥 shows real issue in Render logs
     res.status(500).json({ message: error.message });
   }
 };
